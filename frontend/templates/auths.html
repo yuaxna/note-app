@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Login / Register</title>
+  <link rel="stylesheet" href="../css/auths.css">
+  <style>
+    form {
+      margin-bottom: 20px;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="auth-container">
+
+    <!-- LOGIN FORM -->
+    <form id="login-form">
+      <h2>Login</h2>
+
+      <label for="login-identifier">Email or Username</label>
+      <input type="text" id="login-identifier" name="identifier" placeholder="Email or Username" required />
+
+      <label for="login-password">Password</label>
+      <input type="password" id="login-password" name="password" placeholder="Password" required />
+
+      <button type="submit">Login</button>
+
+      <div class="toggle-text">
+        Don't have an account?
+        <a href="#" id="show-register" class="toggle-link">Register</a>
+      </div>
+    </form>
+
+    <!-- REGISTER FORM -->
+    <form id="register-form" style="display:none;">
+      <h2>Register</h2>
+
+      <label for="register-fullname">Full Name</label>
+      <input type="text" id="register-fullname" name="fullname" placeholder="Full Name" required />
+
+      <label for="register-email">Email</label>
+      <input type="email" id="register-email" name="email" placeholder="Email" required />
+
+      <label for="register-username">Username</label>
+      <input type="text" id="register-username" name="username" placeholder="Username" required />
+
+      <label for="register-password">Password</label>
+      <input type="password" id="register-password" name="password" placeholder="Password" required />
+
+      <label for="register-password-confirm">Password Again</label>
+      <input type="password" id="register-password-confirm" name="password_confirm" placeholder="Confirm Password"
+        required />
+
+      <label for="register-gender">Gender</label>
+      <select id="register-gender" name="gender" required>
+        <option value="">Select Gender</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+      </select>
+
+      <button type="submit">Register</button>
+
+      <div class="toggle-text">
+        Already have an account?
+        <a href="#" id="show-login" class="toggle-link">Login</a>
+      </div>
+
+    </form>
+
+  </div>
+
+
+  <script src="../js/auths.js"></script>
+</body>
+
+</html>

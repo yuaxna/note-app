@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Profile - OliveNotes</title>
+    <link rel="stylesheet" href="/css/home.css" />
+    <style>
+        .profile-container {
+            display: flex;
+            gap: 2rem;
+            padding-top: 100px;
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        .user-info, .user-notes {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(107, 142, 35, 0.1);
+            flex: 1;
+        }
+
+        .user-info h2, .user-notes h2 {
+            margin-bottom: 1rem;
+            color: #6B8E23;
+        }
+
+        .info-item {
+            margin-bottom: 1rem;
+        }
+
+        .note-item {
+            background: #F5F5DC;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <button id="menu-btn" aria-label="Toggle menu">&#9776;</button>
+        <h1 class="site-name">OliveNotes</h1>
+    </header>
+
+    <nav id="sidebar" class="sidebar-closed">
+        <div class="sidebar-header">
+            <div class="user-info">
+                <span class="user-icon">👤</span>
+                <span id="username">User</span>
+            </div>
+            <button id="logout-btn" class="logout-btn">Logout</button>
+        </div>
+        <ul class="sidebar-links">
+            <li><a href="/home">My Notes</a></li>
+            <li><a href="/profile" class="active">Profile</a></li>
+        </ul>
+    </nav>
+
+    <main id="main-content">
+        <div class="profile-container">
+            <!-- Left side: User info -->
+            <div class="user-info">
+                <h2>User Information</h2>
+                <div class="info-item"><strong>Full Name:</strong> <span id="info-fullname">...</span></div>
+                <div class="info-item"><strong>Username:</strong> <span id="info-username">...</span></div>
+                <div class="info-item"><strong>Email:</strong> <span id="info-email">...</span></div>
+                <div class="info-item"><strong>Gender:</strong> <span id="info-gender">...</span></div>
+                <div class="info-item"><strong>Joined:</strong> <span id="info-joined">...</span></div>
+            </div>
+
+            <!-- Right side: Notes -->
+            <div class="user-notes">
+                <h2>Your Notes</h2>
+                <div id="user-notes-list">
+                    <!-- Notes will be populated by JS -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/js/profile.js"></script>
+</body>
+</html>

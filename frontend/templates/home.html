@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>My Notes</title>
+    <link rel="stylesheet" href="/css/home.css" />
+</head>
+
+<body>
+    <header>
+        <button id="menu-btn" aria-label="Toggle menu">&#9776;</button> <!-- first = left -->
+        <h1 class="site-name">OliveNotes</h1> <!-- last = right -->
+    </header>
+
+
+    <nav id="sidebar" class="sidebar-closed" aria-label="Sidebar Navigation">
+        <div class="sidebar-header">
+            <div class="user-info">
+                <span class="user-icon">👤</span>
+                <span id="username">User</span>
+            </div>
+            <button id="logout-btn" class="logout-btn">Logout</button>
+        </div>
+        <ul class="sidebar-links">
+            <li><a href="/home" class="active">My Notes</a></li>
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="#">Favorites</a></li>
+            <li><a href="#">Shared with Me</a></li>
+        </ul>
+    </nav>
+
+    <main id="main-content">
+        <form id="note-form">
+            <h2>Create a Note</h2>
+            <input type="text" id="note-title" placeholder="Title" required />
+            <input type="text" id="note-content" placeholder="Content" required />
+            <button type="submit">Save Note</button>
+        </form>
+
+        <section class="notes-section">
+            <h2>Your Notes</h2>
+            <div id="notes-container"></div>
+        </section>
+    </main>
+
+    <script src="/js/notes.js"></script>
+    <script>
+        // Sidebar toggle script
+        const menuBtn = document.getElementById('menu-btn');
+        const sidebar = document.getElementById('sidebar');
+        menuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('sidebar-closed');
+        });
+
+        // (Logout button functionality will be added later)
+    </script>
+</body>
+
+</html>
