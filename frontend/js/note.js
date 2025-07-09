@@ -48,28 +48,47 @@ document.addEventListener("DOMContentLoaded", () => {
       notes.forEach(note => {
         const div = document.createElement("div");
         div.className = "note-card";
-
-        const date = note.created_at ? new Date(note.created_at) : null;
-        const formattedDate = date ? date.toLocaleString() : "Invalid Date";
-        const author = note.username || "Unknown";
+        div.setAttribute("data-note-id", note.id);
 
         div.innerHTML = `
           <h3>${note.title}</h3>
           <p>${note.content}</p>
-          <div class="note-meta">
-            <small>By <strong>${author}</strong> on <em>${formattedDate}</em></small>
-          </div>
+          <p class="note-meta">By ${note.username || "Unknown"} on ${note.created_at || "Unknown date"}</p>
           <button class="edit-note-btn">Edit</button>
           <button class="delete-note-btn">Delete</button>
+          <button class="share-note-btn">Share</button>
         `;
 
-        // Event listeners
         div.querySelector(".delete-note-btn").addEventListener("click", () => {
           deleteNote(note.id);
         });
 
         div.querySelector(".edit-note-btn").addEventListener("click", () => {
           editNote(note);
+        });
+
+        div.querySelector(".share-note-btn").addEventListener("click", () => {
+          const identifier = prompt("Enter the username or email of the person to share with:");
+          if (!identifier) return;
+
+          fetch("/api/notes/share", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ note_id: note.id, identifier }),
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.message) {
+              alert(data.message);
+            } else {
+              alert(data.error || "Failed to share note.");
+            }
+          })
+          .catch(err => {
+            console.error("Share error:", err);
+            alert("An error occurred while sharing the note.");
+          });
         });
 
         notesContainer.appendChild(div);
@@ -154,14 +173,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initial fetch
   fetchNotes();
+
+  // Sidebar toggle
+  const menuBtn = document.getElementById("menu-btn");
+  const sidebar = document.getElementById("sidebar");
+
+  if (menuBtn && sidebar) {
+    menuBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("sidebar-closed");
+    });
+  }
 });
-
-// Sidebar toggle
-const menuBtn = document.getElementById("menu-btn");
-const sidebar = document.getElementById("sidebar");
-
-if (menuBtn && sidebar) {
-  menuBtn.addEventListener("click", () => {
-    sidebar.classList.toggle("sidebar-closed");
-  });
-}

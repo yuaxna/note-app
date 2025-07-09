@@ -25,7 +25,6 @@ func InitDB() {
 	createTables()
 	log.Println("Database connected successfully")
 }
-
 func createTables() {
 	// Create users table
 	userTable := `
@@ -50,12 +49,25 @@ func createTables() {
 		FOREIGN KEY (user_id) REFERENCES users (id)
 	);`
 
+	// Create shared_notes table
+	sharedNotesTable := `
+	CREATE TABLE IF NOT EXISTS shared_notes (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		note_id INTEGER NOT NULL,
+		user_id INTEGER NOT NULL,
+		FOREIGN KEY (note_id) REFERENCES notes(id) ON DELETE CASCADE,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+		UNIQUE (note_id, user_id)
+	);`
+
 	if _, err := DB.Exec(userTable); err != nil {
 		log.Fatal("Failed to create users table:", err)
 	}
-
 	if _, err := DB.Exec(noteTable); err != nil {
 		log.Fatal("Failed to create notes table:", err)
+	}
+	if _, err := DB.Exec(sharedNotesTable); err != nil {
+		log.Fatal("Failed to create shared_notes table:", err)
 	}
 
 	log.Println("Database tables created/verified successfully")

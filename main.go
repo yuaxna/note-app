@@ -51,6 +51,10 @@ func main() {
 		securedPages.GET("/profile", func(c *gin.Context) {
 			c.HTML(http.StatusOK, "profile.html", nil)
 		})
+		securedPages.GET("/shared", func(c *gin.Context) {
+			c.HTML(http.StatusOK, "shared.html", nil)
+		})
+
 	}
 
 	// Protected API Routes
@@ -63,6 +67,10 @@ func main() {
 		api.POST("/notes", backend.CreateNote)
 		api.PUT("/notes", backend.UpdateNote)
 		api.DELETE("/notes/:id", backend.DeleteNote)
+		api.POST("/share", backend.ShareNote)
+		api.GET("/shared", backend.GetSharedNotes)
+		api.POST("/notes/share", backend.ShareNote)
+		api.GET("/users", backend.AuthRequired(), backend.GetUsers)
 	}
 
 	// WebSocket endpoint for real-time collaboration (you will implement handler)

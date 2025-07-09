@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <title>My Notes</title>
     <link rel="stylesheet" href="/css/home.css" />
 </head>
+
 <body>
     <header>
         <button id="menu-btn" aria-label="Toggle menu">&#9776;</button>
@@ -21,8 +23,7 @@
         <ul class="sidebar-links">
             <li><a href="/home" class="active">My Notes</a></li>
             <li><a href="/profile">Profile</a></li>
-            <li><a href="#">Favorites</a></li>
-            <li><a href="#">Shared with Me</a></li>
+            <li><a href="/shared">Shared with Me</a></li>
         </ul>
     </nav>
     <main id="main-content">
@@ -34,20 +35,21 @@
                         <h2>Create a Note</h2>
                         <p>Write down your thoughts and ideas</p>
                     </div>
-                    
+
                     <form id="note-form">
                         <input type="hidden" id="note-id" />
-                        
+
                         <div class="form-group">
                             <label for="note-title">Title</label>
                             <input type="text" id="note-title" placeholder="Enter note title..." required />
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="note-content">Content</label>
-                            <textarea id="note-content" placeholder="Write your note content here..." required rows="6"></textarea>
+                            <textarea id="note-content" placeholder="Write your note content here..." required
+                                rows="6"></textarea>
                         </div>
-                        
+
                         <button type="submit" class="save-btn">
                             <span></span>
                             Save Note
@@ -65,7 +67,7 @@
                             <span id="notes-count">0</span> notes
                         </div>
                     </div>
-                    
+
                     <div class="notes-list-container">
                         <div id="notes-container">
                             <!-- Notes will be loaded here by JavaScript -->
@@ -76,10 +78,20 @@
         </div>
     </main>
 
+    <div id="share-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span id="close-share-modal" class="close">&times;</span>
+            <h3>Select user to share note with</h3>
+            <ul id="user-list"></ul>
+        </div>
+    </div>
+
+
     <div id="note-message" class="note-message"></div>
 
     <!-- Load note functionality -->
     <script src="/js/note.js"></script>
     <script src="/js/websocket.js"></script>
 </body>
+
 </html>

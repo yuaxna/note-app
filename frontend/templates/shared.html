@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Shared Notes</title>
+  <link rel="stylesheet" href="/css/home.css" />
+</head>
+<body>
+  <header>
+    <button id="menu-btn">&#9776;</button>
+    <h1 class="site-name">OliveNotes</h1>
+  </header>
+
+  <nav id="sidebar" class="sidebar-closed">
+    <div class="sidebar-header">
+      <div class="user-info">
+        <span class="user-icon">👤</span>
+        <span id="username">User</span>
+      </div>
+      <button id="logout-btn" class="logout-btn">Logout</button>
+    </div>
+    <ul class="sidebar-links">
+      <li><a href="/home">My Notes</a></li>
+      <li><a href="/profile">Profile</a></li>
+      <li><a href="/shared" class="active">Shared with Me</a></li>
+    </ul>
+  </nav>
+
+  <main id="main-content">
+    <section class="notes-section">
+      <h2>Shared Notes</h2>
+      <div id="shared-notes-container"></div>
+    </section>
+  </main>
+
+  <script src="/js/shared.js"></script>
+    <script src = "/js/profile.js"></script>
+</body>
+</html>

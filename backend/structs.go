@@ -27,3 +27,8 @@ type Note struct {
 	UpdatedAt string `json:"updated_at"`
 	Username  string `json:"username"`
 }
+
+type ShareInput struct {
+	NoteID      int `json:"note_id"`
+	TargetUserID int `json:"target_user_id"`
+}

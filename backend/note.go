@@ -174,3 +174,4 @@ func DeleteNote(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Note deleted successfully"})
 }
+

@@ -17,9 +17,11 @@ ws.onerror = (error) => {
   console.error("WebSocket error:", error);
 };
 
-// Example: send a message on note change
 function sendNoteUpdate(note) {
   if (ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify(note));
+    ws.send(JSON.stringify({
+      ...note,
+      sender: currentUsername // you'd fetch this from session
+    }));
   }
 }

@@ -3,6 +3,7 @@ package backend
 import (
 	"net/http"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -15,8 +16,16 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-// WSHandler upgrades the HTTP connection to WebSocket and handles messages
 func WSHandler(c *gin.Context) {
+	// Check user authentication (must be logged in)
+	session := sessions.Default(c)
+	userID := session.Get("user_id")
+	if userID == nil {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	// Upgrade to WebSocket *only if authorized*
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upgrade to WebSocket"})
@@ -24,16 +33,14 @@ func WSHandler(c *gin.Context) {
 	}
 	defer conn.Close()
 
-	// Now handle incoming messages and broadcast or save changes as needed
+	// Handle messages (echo or broadcast later)
 	for {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
 			break // connection closed or error
 		}
 
-		// Here you can parse msg and do stuff with it, e.g. update notes live
-
-		// For now, echo back message (test)
+		// For now, just echo back the message
 		err = conn.WriteMessage(websocket.TextMessage, msg)
 		if err != nil {
 			break
