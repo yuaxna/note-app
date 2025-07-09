@@ -4,46 +4,12 @@
     <meta charset="UTF-8" />
     <title>Profile - OliveNotes</title>
     <link rel="stylesheet" href="/css/home.css" />
-    <style>
-        .profile-container {
-            display: flex;
-            gap: 2rem;
-            padding-top: 100px;
-            max-width: 1000px;
-            margin: auto;
-        }
-
-        .user-info, .user-notes {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 0 10px rgba(107, 142, 35, 0.1);
-            flex: 1;
-        }
-
-        .user-info h2, .user-notes h2 {
-            margin-bottom: 1rem;
-            color: #6B8E23;
-        }
-
-        .info-item {
-            margin-bottom: 1rem;
-        }
-
-        .note-item {
-            background: #F5F5DC;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: 8px;
-        }
-    </style>
 </head>
 <body>
     <header>
         <button id="menu-btn" aria-label="Toggle menu">&#9776;</button>
         <h1 class="site-name">OliveNotes</h1>
     </header>
-
     <nav id="sidebar" class="sidebar-closed">
         <div class="sidebar-header">
             <div class="user-info">
@@ -57,29 +23,154 @@
             <li><a href="/profile" class="active">Profile</a></li>
         </ul>
     </nav>
-
     <main id="main-content">
         <div class="profile-container">
-            <!-- Left side: User info -->
-            <div class="user-info">
-                <h2>User Information</h2>
-                <div class="info-item"><strong>Full Name:</strong> <span id="info-fullname">...</span></div>
-                <div class="info-item"><strong>Username:</strong> <span id="info-username">...</span></div>
-                <div class="info-item"><strong>Email:</strong> <span id="info-email">...</span></div>
-                <div class="info-item"><strong>Gender:</strong> <span id="info-gender">...</span></div>
-                <div class="info-item"><strong>Joined:</strong> <span id="info-joined">...</span></div>
+            <!-- Left Half: User Information -->
+            <div class="profile-left">
+                <div class="user-info-card">
+                    <div class="profile-header">
+                        <div class="profile-avatar">
+                            <span class="avatar-icon">👤</span>
+                        </div>
+                        <h2>User Profile</h2>
+                    </div>
+                    
+                    <div class="info-section">
+                        <div class="info-item">
+                            <label>Full Name</label>
+                            <span id="info-fullname">Loading...</span>
+                        </div>
+                        
+                        <div class="info-item">
+                            <label>Username</label>
+                            <span id="info-username">Loading...</span>
+                        </div>
+                        
+                        <div class="info-item">
+                            <label>Email</label>
+                            <span id="info-email">Loading...</span>
+                        </div>
+                        
+                        <div class="info-item">
+                            <label>Gender</label>
+                            <span id="info-gender">Loading...</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            <!-- Right side: Notes -->
-            <div class="user-notes">
-                <h2>Your Notes</h2>
-                <div id="user-notes-list">
-                    <!-- Notes will be populated by JS -->
+            
+            <!-- Right Half: User Notes -->
+            <div class="profile-right">
+                <div class="user-notes-card">
+                    <div class="notes-header">
+                        <h2>Your Notes</h2>
+                        <div class="notes-count">
+                            <span id="notes-count">0</span> notes
+                        </div>
+                    </div>
+                    
+                    <div class="notes-container">
+                        <div id="user-notes-list">Loading...</div>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Sidebar toggle
+            const menuBtn = document.getElementById('menu-btn');
+            const sidebar = document.getElementById('sidebar');
+            menuBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('sidebar-closed');
+            });
 
-    <script src="/js/profile.js"></script>
+            // Logout functionality
+            document.getElementById("logout-btn").addEventListener("click", async () => {
+                const res = await fetch("/logout", {
+                    method: "POST",
+                    credentials: "include"
+                });
+
+                if (res.ok) {
+                    alert("Logged out successfully.");
+                    window.location.href = "/";
+                } else {
+                    const data = await res.json();
+                    alert(data.error || "Logout failed.");
+                }
+            });
+
+            // Load user info
+            try {
+                const res = await fetch("/api/me", {
+                    credentials: "include"
+                });
+                
+                if (res.ok) {
+                    const user = await res.json();
+                    document.getElementById("username").textContent = user.username || "User";
+                    document.getElementById("info-fullname").textContent = user.fullname || "N/A";
+                    document.getElementById("info-username").textContent = user.username || "N/A";
+                    document.getElementById("info-email").textContent = user.email || "N/A";
+                    document.getElementById("info-gender").textContent = user.gender || "N/A";
+                } else {
+                    console.error("Failed to load user info");
+                    document.getElementById("info-fullname").textContent = "Error loading";
+                }
+            } catch (error) {
+                console.error("Error loading user info:", error);
+            }
+
+            // Load user notes
+            try {
+                const res = await fetch("/api/notes", {
+                    credentials: "include"
+                });
+                
+                if (res.ok) {
+                    const notes = await res.json();
+                    const notesContainer = document.getElementById("user-notes-list");
+                    const notesCount = document.getElementById("notes-count");
+                    
+                    notesCount.textContent = notes.length;
+                    
+                    if (notes.length === 0) {
+                        notesContainer.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-icon">📝</div>
+                                <p>No notes yet</p>
+                                <a href="/home" class="create-note-link">Create your first note</a>
+                            </div>
+                        `;
+                    } else {
+                        notesContainer.innerHTML = notes.map(note => `
+                            <div class="note-item">
+                                <div class="note-header">
+                                    <h4>${note.title}</h4>
+                                    <span class="note-date">${new Date(note.created_at).toLocaleDateString()}</span>
+                                </div>
+                                <p class="note-content">${note.content}</p>
+                            </div>
+                        `).join('');
+                    }
+                } else {
+                    document.getElementById("user-notes-list").innerHTML = `
+                        <div class="error-state">
+                            <p>Error loading notes.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error("Error loading notes:", error);
+                document.getElementById("user-notes-list").innerHTML = `
+                    <div class="error-state">
+                        <p>Error loading notes.</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
 </body>
 </html>

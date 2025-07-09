@@ -1,19 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8" />
     <title>My Notes</title>
     <link rel="stylesheet" href="/css/home.css" />
 </head>
-
 <body>
     <header>
-        <button id="menu-btn" aria-label="Toggle menu">&#9776;</button> <!-- first = left -->
-        <h1 class="site-name">OliveNotes</h1> <!-- last = right -->
+        <button id="menu-btn" aria-label="Toggle menu">&#9776;</button>
+        <h1 class="site-name">OliveNotes</h1>
     </header>
-
-
     <nav id="sidebar" class="sidebar-closed" aria-label="Sidebar Navigation">
         <div class="sidebar-header">
             <div class="user-info">
@@ -29,32 +25,61 @@
             <li><a href="#">Shared with Me</a></li>
         </ul>
     </nav>
-
     <main id="main-content">
-        <form id="note-form">
-            <h2>Create a Note</h2>
-            <input type="text" id="note-title" placeholder="Title" required />
-            <input type="text" id="note-content" placeholder="Content" required />
-            <button type="submit">Save Note</button>
-        </form>
+        <div class="home-container">
+            <!-- Left Side: Create Note Form -->
+            <div class="home-left">
+                <div class="note-form-card">
+                    <div class="form-header">
+                        <h2>Create a Note</h2>
+                        <p>Write down your thoughts and ideas</p>
+                    </div>
+                    
+                    <form id="note-form">
+                        <input type="hidden" id="note-id" />
+                        
+                        <div class="form-group">
+                            <label for="note-title">Title</label>
+                            <input type="text" id="note-title" placeholder="Enter note title..." required />
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="note-content">Content</label>
+                            <textarea id="note-content" placeholder="Write your note content here..." required rows="6"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="save-btn">
+                            <span></span>
+                            Save Note
+                        </button>
+                    </form>
+                </div>
+            </div>
 
-        <section class="notes-section">
-            <h2>Your Notes</h2>
-            <div id="notes-container"></div>
-        </section>
+            <!-- Right Side: Notes List -->
+            <div class="home-right">
+                <div class="notes-list-card">
+                    <div class="notes-list-header">
+                        <h2>Notes</h2>
+                        <div class="notes-stats">
+                            <span id="notes-count">0</span> notes
+                        </div>
+                    </div>
+                    
+                    <div class="notes-list-container">
+                        <div id="notes-container">
+                            <!-- Notes will be loaded here by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
-    <script src="/js/notes.js"></script>
-    <script>
-        // Sidebar toggle script
-        const menuBtn = document.getElementById('menu-btn');
-        const sidebar = document.getElementById('sidebar');
-        menuBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('sidebar-closed');
-        });
+    <div id="note-message" class="note-message"></div>
 
-        // (Logout button functionality will be added later)
-    </script>
+    <!-- Load note functionality -->
+    <script src="/js/note.js"></script>
+    <script src="/js/websocket.js"></script>
 </body>
-
 </html>

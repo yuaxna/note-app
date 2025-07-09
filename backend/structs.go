@@ -1,12 +1,16 @@
 package backend
 
+import "time"
+
 type User struct {
-	Fullname   string `json:"fullname"`
-	Email      string `json:"email"`
-	Username   string `json:"username"`
-	Password   string `json:"password"`
-	Gender     string `json:"gender"`
-	Identifier string `json:"identifier"`
+	ID         int       `json:"id"`
+	Fullname   string    `json:"fullname"`
+	Email      string    `json:"email"`
+	Username   string    `json:"username"`
+	Password   string    `json:"password"`
+	Gender     string    `json:"gender"`
+	Identifier string    `json:"identifier"` // For login (username or email)
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 type LoginInput struct {
@@ -21,4 +25,5 @@ type Note struct {
 	Content   string `json:"content"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
+	Username  string `json:"username"`
 }

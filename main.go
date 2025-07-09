@@ -11,46 +11,64 @@ import (
 )
 
 func main() {
-	// Initialize the database
+	// Initialize database
 	backend.InitDB()
 
-	// Create router
+	// Setup Gin router
 	router := gin.Default()
 
-	store := cookie.NewStore([]byte("your-secret-key"))
+	// Setup session store (make sure to change the secret in production)
+	store := cookie.NewStore([]byte("your-very-secret-key")) // TODO: Replace with env/config
+	store.Options(sessions.Options{
+		Path:     "/",
+		MaxAge:   86400 * 7, // 7 days
+		HttpOnly: true,
+		Secure:   false, // Set to true in production with HTTPS
+		SameSite: http.SameSiteLaxMode,
+	})
 	router.Use(sessions.Sessions("olive_session", store))
 
 	// Serve static files
 	router.Static("/css", "./frontend/css")
 	router.Static("/js", "./frontend/js")
-
-	// Load templates
 	router.LoadHTMLGlob("frontend/templates/*")
 
-	// Register backend auth routes (/signup, /login)
+	// Auth (public)
 	backend.RegisterAuthRoutes(router)
 
-	// Route: root → login/register page
+	// Public HTML Routes
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "auths.html", nil)
 	})
 
-	// Route: home page
-	router.GET("/home", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "home.html", nil)
-	})
+	// Protected HTML Pages
+	securedPages := router.Group("/")
+	securedPages.Use(backend.AuthRequired())
+	{
+		securedPages.GET("/home", func(c *gin.Context) {
+			c.HTML(http.StatusOK, "home.html", nil)
+		})
+		securedPages.GET("/profile", func(c *gin.Context) {
+			c.HTML(http.StatusOK, "profile.html", nil)
+		})
+	}
 
-	// Route: profile page
-	router.GET("/profile", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "profile.html", nil)
-	})
+	// Protected API Routes
+	api := router.Group("/api")
+	api.Use(backend.AuthRequired())
+	{
+		api.GET("/me", backend.GetMe)
+		api.GET("/notes", backend.GetUserNotes)
+		api.GET("/debug", backend.DebugUser)
+		api.POST("/notes", backend.CreateNote)
+		api.PUT("/notes", backend.UpdateNote)
+		api.DELETE("/notes/:id", backend.DeleteNote)
+	}
 
-	// API route: create a note
-	router.POST("/api/notes", backend.CreateNoteHandler)
-	router.GET("/api/notes", backend.GetUserNotes)
-	router.GET("/api/me", backend.AuthRequired(), backend.GetMe)
-	router.POST("/logout", backend.Logout)
+	// WebSocket endpoint for real-time collaboration (you will implement handler)
+	router.GET("/ws", backend.WSHandler)
 
+	// Start Server
 	log.Println("Server running at http://localhost:8080")
 	router.Run(":8080")
 }

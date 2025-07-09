@@ -1,34 +1,72 @@
-document.addEventListener("DOMContentLoaded", async () => {
-    try {
-        // Get user info
-        const meRes = await fetch("/api/me");
-        const me = await meRes.json();
+document.addEventListener('DOMContentLoaded', async () => {
+    const menuBtn = document.getElementById('menu-btn');
+    const sidebar = document.getElementById('sidebar');
 
-        if (!me.name) {
-            alert("You are not logged in.");
-            window.location.href = "/";
-            return;
-        }
+    // Sidebar toggle
+    menuBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('sidebar-closed');
+    });
 
-        // Fill user info
-        document.getElementById("info-fullname").textContent = me.name;
-        document.getElementById("info-username").textContent = me.username;
-        document.getElementById("info-email").textContent = me.email;
-        document.getElementById("info-gender").textContent = me.gender;
-        document.getElementById("info-joined").textContent = me.joined;
-
-        // Get notes
-        const notesRes = await fetch(`/api/notes?user_id=${me.id}`);
-        const notes = await notesRes.json();
-
-        const container = document.getElementById("user-notes-list");
-        notes.forEach(note => {
-            const div = document.createElement("div");
-            div.className = "note-item";
-            div.innerHTML = `<strong>${note.title}</strong><p>${note.content}</p>`;
-            container.appendChild(div);
+    // Logout functionality
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+        const res = await fetch("/logout", {
+            method: "POST",
+            credentials: "include"
         });
-    } catch (err) {
-        console.error("Error loading profile:", err);
+
+        const data = await res.json();
+
+        if (res.ok) {
+            alert("Logged out successfully.");
+            window.location.href = "/";
+        } else {
+            alert(data.error || "Logout failed.");
+        }
+    });
+
+    // Load user info
+    try {
+        const res = await fetch("/api/me", {
+            credentials: "include"
+        });
+
+        if (res.ok) {
+            const user = await res.json();
+            document.getElementById("username").textContent = user.username || "User";
+            document.getElementById("info-fullname").textContent = user.fullname || "N/A";
+            document.getElementById("info-username").textContent = user.username || "N/A";
+            document.getElementById("info-email").textContent = user.email || "N/A";
+            // Add other user info fields as needed
+        } else {
+            console.error("Failed to load user info");
+            // Don't show alert here, just log the error
+        }
+    } catch (error) {
+        console.error("Error loading user info:", error);
+    }
+
+    // Load user notes
+    try {
+        const res = await fetch("/api/notes", {
+            credentials: "include"
+        });
+
+        if (res.ok) {
+            const notes = await res.json();
+            const notesContainer = document.getElementById("user-notes-list");
+
+            if (notes.length === 0) {
+                notesContainer.innerHTML = "<p>No notes yet.</p>";
+            } else {
+                notesContainer.innerHTML = notes.map(note => `
+                    <div class="note-item">
+                        <h4>${note.title}</h4>
+                        <p>${note.content}</p>
+                    </div>
+                `).join('');
+            }
+        }
+    } catch (error) {
+        console.error("Error loading notes:", error);
     }
 });

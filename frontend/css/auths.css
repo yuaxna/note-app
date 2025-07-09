@@ -101,3 +101,8 @@ h2 {
     color: #B29566;
 }
 
+.error-message {
+  color: red;
+  margin-top: 8px;
+  font-size: 0.9em;
+}
