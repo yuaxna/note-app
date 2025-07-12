@@ -1,6 +1,11 @@
 package backend
 
-import "time"
+import (
+	"sync"
+	"time"
+
+	"github.com/gorilla/websocket"
+)
 
 type User struct {
 	ID         int       `json:"id"`
@@ -29,6 +34,24 @@ type Note struct {
 }
 
 type ShareInput struct {
-	NoteID      int `json:"note_id"`
+	NoteID       int `json:"note_id"`
 	TargetUserID int `json:"target_user_id"`
+}
+
+type NoteUpdateMessage struct {
+	Action    string    `json:"action"` // create, update, delete, share
+	NoteID    int       `json:"note_id"`
+	Title     string    `json:"title,omitempty"`
+	Content   string    `json:"content,omitempty"`
+	Sender    string    `json:"sender"`    // username
+	Timestamp time.Time `json:"timestamp"` // time of update
+}
+
+// ClientManager manages all websocket clients and broadcasts
+type ClientManager struct {
+	clients    map[*websocket.Conn]bool
+	broadcast  chan NoteUpdateMessage
+	register   chan *websocket.Conn
+	unregister chan *websocket.Conn
+	mu         sync.Mutex
 }

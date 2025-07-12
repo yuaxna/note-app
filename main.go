@@ -14,16 +14,19 @@ func main() {
 	// Initialize database
 	backend.InitDB()
 
+	// Start WebSocket manager goroutine
+	backend.StartManager()
+
 	// Setup Gin router
 	router := gin.Default()
 
 	// Setup session store (make sure to change the secret in production)
-	store := cookie.NewStore([]byte("your-very-secret-key")) // TODO: Replace with env/config
+	store := cookie.NewStore([]byte("your-very-secret-key"))
 	store.Options(sessions.Options{
 		Path:     "/",
-		MaxAge:   86400 * 7, // 7 days
+		MaxAge:   86400 * 7,
 		HttpOnly: true,
-		Secure:   false, // Set to true in production with HTTPS
+		Secure:   false,
 		SameSite: http.SameSiteLaxMode,
 	})
 	router.Use(sessions.Sessions("olive_session", store))
@@ -54,7 +57,6 @@ func main() {
 		securedPages.GET("/shared", func(c *gin.Context) {
 			c.HTML(http.StatusOK, "shared.html", nil)
 		})
-
 	}
 
 	// Protected API Routes
@@ -68,14 +70,13 @@ func main() {
 		api.PUT("/notes", backend.UpdateNote)
 		api.DELETE("/notes/:id", backend.DeleteNote)
 
-		api.POST("/share", backend.ShareNote) // ✅ keep this
-		// api.POST("/notes/share", backend.ShareNote) // ❌ remove this
+		api.POST("/share", backend.ShareNote)
 
 		api.GET("/shared", backend.GetSharedNotes)
-		api.GET("/users", backend.AuthRequired(), backend.GetUsers)
+		api.GET("/users", backend.GetUsers)
 	}
 
-	// WebSocket endpoint for real-time collaboration (you will implement handler)
+	// WebSocket endpoint for real-time collaboration
 	router.GET("/ws", backend.WSHandler)
 
 	// Start Server

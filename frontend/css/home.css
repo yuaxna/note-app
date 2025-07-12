@@ -33,27 +33,22 @@ header {
   /* Account for header height */
   position: fixed;
   top: 60px;
-  /* Below header */
   left: 0;
   padding: 1rem;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
   transition: transform 0.3s ease;
   z-index: 1000;
-  /* Below header */
 }
 
-/* Main content - adjust for both sidebar and header */
 #main-content {
   margin-left: 240px;
   padding: 80px 2rem 2rem 2rem;
-  /* Top padding accounts for header */
   background-color: #FFFDF4;
   min-height: calc(100vh - 80px);
   transition: margin-left 0.3s ease;
 }
 
-/* When sidebar is closed */
 .sidebar-closed {
   transform: translateX(-240px);
 }
@@ -62,7 +57,6 @@ header {
   margin-left: 0;
 }
 
-/* Note form width adjustment */
 #note-form {
   background-color: white;
   padding: 2rem;
@@ -448,6 +442,32 @@ header {
   background: #557A1F;
 }
 
+/* #share-modal {
+  /* Your modal styles... */
+
+
+#user-list {
+  list-style: none;
+  padding: 0;
+  max-height: 200px;
+  /* scrollable if too long */
+  overflow-y: auto;
+  margin-top: 10px;
+}
+
+#user-list li {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #ddd;
+  transition: background-color 0.3s;
+}
+
+#user-list li:hover {
+  background-color: #f0f8ff;
+  color: #007BFF;
+}
+
+
 /* --------------- profile page ------------- */
 
 .profile-container {
@@ -731,4 +751,33 @@ header {
   max-height: 80%;
   overflow-y: auto;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+#shared-notes-container .note-card {
+  background: linear-gradient(135deg, #F5F5DC 0%, #FFFDF4 100%);
+  border: 1px solid #DCDAC5;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(107, 142, 35, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#shared-notes-container .note-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(107, 142, 35, 0.15);
+}
+
+#shared-notes-container .note-card h3 {
+  color: #6B8E23;
+  margin: 0 0 0.8rem 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+#shared-notes-container .note-card p {
+  color: #3B4A2D;
+  margin: 0;
+  line-height: 1.6;
+  font-size: 1rem;
 }
