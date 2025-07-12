@@ -19,10 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function fetchNotes() {
     try {
-      const res = await fetch("/api/notes", {
-        method: "GET",
-        credentials: "include",
-      });
+      const res = await fetch("/api/notes", { credentials: "include" });
 
       if (!res.ok) {
         showMessage("Failed to fetch notes.");
@@ -31,7 +28,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const notes = await res.json();
       notesContainer.innerHTML = "";
-
       if (notesCount) notesCount.textContent = notes.length;
 
       if (notes.length === 0) {
@@ -51,33 +47,36 @@ document.addEventListener("DOMContentLoaded", () => {
         div.setAttribute("data-note-id", note.id);
 
         div.innerHTML = `
-          <h3>${note.title}</h3>
+          <h3>${note.title} ${!note.is_owner ? '<span class="shared-badge">Shared</span>' : ''}</h3>
           <p>${note.content}</p>
           <p class="note-meta">By ${note.username || "Unknown"} on ${note.created_at || "Unknown date"}</p>
-          <button class="edit-note-btn">Edit</button>
-          <button class="delete-note-btn">Delete</button>
-          <button class="share-note-btn">Share</button>
         `;
 
-        div.querySelector(".delete-note-btn").addEventListener("click", () => {
-          deleteNote(note.id);
-        });
+        if (note.can_edit) {
+          const editBtn = document.createElement("button");
+          editBtn.textContent = "Edit";
+          editBtn.className = "edit-note-btn";
+          editBtn.addEventListener("click", () => editNote(note));
+          div.appendChild(editBtn);
+        }
 
-        div.querySelector(".edit-note-btn").addEventListener("click", () => {
-          editNote(note);
-        });
+        if (note.is_owner) {
+          const deleteBtn = document.createElement("button");
+          deleteBtn.textContent = "Delete";
+          deleteBtn.className = "delete-note-btn";
+          deleteBtn.addEventListener("click", () => deleteNote(note.id));
+          div.appendChild(deleteBtn);
 
-        div.querySelector(".share-note-btn").addEventListener("click", () => {
-          if (window.openShareModal) {
-            window.openShareModal({
-              id: note.id,
-              title: note.title,
-              content: note.content,
-            });
-          } else {
-            console.error("Share modal not loaded yet.");
-          }
-        });
+          const shareBtn = document.createElement("button");
+          shareBtn.textContent = "Share";
+          shareBtn.className = "share-note-btn";
+          shareBtn.addEventListener("click", () => {
+            if (window.openShareModal) {
+              window.openShareModal(note);
+            }
+          });
+          div.appendChild(shareBtn);
+        }
 
         notesContainer.appendChild(div);
       });
@@ -90,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function editNote(note) {
     titleInput.value = note.title;
     contentInput.value = note.content;
-    noteIdInput.value = note.id;
+    noteIdInput.value = note.id; // This is important!
   }
 
   async function deleteNote(id) {
@@ -101,7 +100,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       const data = await res.json();
-
       if (res.ok) {
         showMessage("Note deleted", true);
         fetchNotes();
@@ -118,14 +116,13 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
 
     const noteId = noteIdInput.value;
+    const url = noteId ? `/api/notes/${noteId}` : "/api/notes";
     const method = noteId ? "PUT" : "POST";
-    const url = "/api/notes";
 
     const newNote = {
       title: titleInput.value.trim(),
       content: contentInput.value.trim(),
     };
-    if (noteId) newNote.id = parseInt(noteId);
 
     if (!newNote.title || !newNote.content) {
       showMessage("Please fill in both title and content.");
@@ -135,15 +132,12 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const res = await fetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(newNote),
       });
 
       const data = await res.json();
-
       if (res.ok) {
         titleInput.value = "";
         contentInput.value = "";
@@ -159,6 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Initial fetch
+
+  // Initial load
   fetchNotes();
 });

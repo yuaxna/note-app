@@ -2,6 +2,7 @@ package backend
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-contrib/sessions"
@@ -41,14 +42,18 @@ func GetUserNotes(c *gin.Context) {
 	userID := c.GetInt("user_id")
 
 	rows, err := DB.Query(`
-		SELECT n.id, n.title, n.content, 
-		       COALESCE(n.created_at, datetime('now')) as created_at,
-		       u.username 
-		FROM notes n 
-		JOIN users u ON n.user_id = u.id 
-		WHERE n.user_id = ? 
+		SELECT 
+			n.id, n.title, n.content, 
+			COALESCE(n.created_at, datetime('now')) as created_at,
+			u.username,
+			CASE WHEN n.user_id = ? THEN 1 ELSE 0 END AS is_owner,
+			CASE WHEN (n.user_id = ? OR s.user_id = ?) THEN 1 ELSE 0 END AS can_edit
+		FROM notes n
+		LEFT JOIN shared_notes s ON s.note_id = n.id AND s.user_id = ?
+		JOIN users u ON n.user_id = u.id
+		WHERE n.user_id = ? OR s.user_id = ?
 		ORDER BY n.created_at DESC
-	`, userID)
+	`, userID, userID, userID, userID, userID, userID)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch notes"})
@@ -58,20 +63,30 @@ func GetUserNotes(c *gin.Context) {
 
 	var notes []map[string]interface{}
 	for rows.Next() {
-		var id int
-		var title, content, createdAt, username string
+		var (
+			id        int
+			title     string
+			content   string
+			createdAt string
+			username  string
+			isOwner   int
+			canEdit   int
+		)
 
-		if err := rows.Scan(&id, &title, &content, &createdAt, &username); err == nil {
-			note := map[string]interface{}{
-				"id":         id,
-				"title":      title,
-				"content":    content,
-				"created_at": createdAt,
-				"username":   username,
-				"user_id":    userID,
-			}
-			notes = append(notes, note)
+		if err := rows.Scan(&id, &title, &content, &createdAt, &username, &isOwner, &canEdit); err != nil {
+			continue
 		}
+
+		note := map[string]interface{}{
+			"id":         id,
+			"title":      title,
+			"content":    content,
+			"created_at": createdAt,
+			"username":   username,
+			"is_owner":   isOwner == 1,
+			"can_edit":   canEdit == 1,
+		}
+		notes = append(notes, note)
 	}
 
 	c.JSON(http.StatusOK, notes)
@@ -128,27 +143,46 @@ func AuthRequired() gin.HandlerFunc {
 }
 
 func UpdateNote(c *gin.Context) {
-	var note Note
-	if err := c.ShouldBindJSON(&note); err != nil {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid note ID"})
+		return
+	}
+
+	var input struct {
+		Title   string `json:"title"`
+		Content string `json:"content"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
 
-	userID := c.GetInt("user_id")
+	currentUserID := c.GetInt("user_id")
 
-	// Optional: verify note belongs to user before updating (security)
-	res, err := DB.Exec(
-		"UPDATE notes SET title = ?, content = ? WHERE id = ? AND user_id = ?",
-		note.Title, note.Content, note.ID, userID,
-	)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update note"})
+	// Permission check:
+	var exists bool
+	err = DB.QueryRow(`
+        SELECT EXISTS(
+            SELECT 1 FROM notes n
+            LEFT JOIN shared_notes s ON s.note_id = n.id AND s.user_id = ?
+            WHERE n.id = ? AND (n.user_id = ? OR s.user_id = ?)
+        )
+    `, currentUserID, id, currentUserID, currentUserID).Scan(&exists)
+
+	if err != nil || !exists {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You don't have permission to edit this note"})
 		return
 	}
 
-	rowsAffected, _ := res.RowsAffected()
-	if rowsAffected == 0 {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Note not found or not owned by user"})
+	// Update:
+	_, err = DB.Exec(`
+        UPDATE notes SET title = ?, content = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
+    `, input.Title, input.Content, id)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update note"})
 		return
 	}
 
@@ -174,4 +208,3 @@ func DeleteNote(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Note deleted successfully"})
 }
-

@@ -114,3 +114,4 @@ func GetUsers(c *gin.Context) {
 
 	c.JSON(http.StatusOK, users)
 }
+
