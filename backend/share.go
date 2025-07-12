@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -29,10 +30,13 @@ func ShareNote(c *gin.Context) {
 		return
 	}
 
+	// <-- Add the log here -->
+	log.Println("Sharing note:", input.NoteID, "to user:", input.TargetUserID)
+
 	// Insert into shared_notes (ignoring duplicates due to UNIQUE constraint)
 	_, err := DB.Exec(`
-		INSERT OR IGNORE INTO shared_notes (note_id, user_id) VALUES (?, ?)
-	`, input.NoteID, input.TargetUserID)
+        INSERT OR IGNORE INTO shared_notes (note_id, user_id) VALUES (?, ?)
+    `, input.NoteID, input.TargetUserID)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to share note"})
@@ -44,14 +48,15 @@ func ShareNote(c *gin.Context) {
 
 func GetSharedNotes(c *gin.Context) {
 	userID := c.GetInt("user_id")
+	log.Printf("Fetching shared notes for user_id: %d", userID)
 
 	rows, err := DB.Query(`
-		SELECT n.id, n.title, n.content, u.username, n.created_at
-		FROM shared_notes s
-		JOIN notes n ON s.note_id = n.id
-		JOIN users u ON n.user_id = u.id
-		WHERE s.user_id = ?
-	`, userID)
+        SELECT n.id, n.title, n.content, u.username, n.created_at
+        FROM shared_notes s
+        JOIN notes n ON s.note_id = n.id
+        JOIN users u ON n.user_id = u.id
+        WHERE s.user_id = ?
+    `, userID)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch shared notes"})
@@ -64,6 +69,7 @@ func GetSharedNotes(c *gin.Context) {
 		var id int
 		var title, content, author, createdAt string
 		if err := rows.Scan(&id, &title, &content, &author, &createdAt); err != nil {
+			log.Println("Error scanning shared note:", err)
 			continue
 		}
 		shared = append(shared, gin.H{
@@ -73,6 +79,10 @@ func GetSharedNotes(c *gin.Context) {
 			"author":     author,
 			"created_at": createdAt,
 		})
+	}
+
+	if shared == nil {
+		shared = []gin.H{}
 	}
 
 	c.JSON(http.StatusOK, shared)

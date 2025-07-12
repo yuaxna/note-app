@@ -67,9 +67,11 @@ func main() {
 		api.POST("/notes", backend.CreateNote)
 		api.PUT("/notes", backend.UpdateNote)
 		api.DELETE("/notes/:id", backend.DeleteNote)
-		api.POST("/share", backend.ShareNote)
+
+		api.POST("/share", backend.ShareNote) // ✅ keep this
+		// api.POST("/notes/share", backend.ShareNote) // ❌ remove this
+
 		api.GET("/shared", backend.GetSharedNotes)
-		api.POST("/notes/share", backend.ShareNote)
 		api.GET("/users", backend.AuthRequired(), backend.GetUsers)
 	}
 

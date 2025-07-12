@@ -68,27 +68,15 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         div.querySelector(".share-note-btn").addEventListener("click", () => {
-          const identifier = prompt("Enter the username or email of the person to share with:");
-          if (!identifier) return;
-
-          fetch("/api/notes/share", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ note_id: note.id, identifier }),
-          })
-          .then(res => res.json())
-          .then(data => {
-            if (data.message) {
-              alert(data.message);
-            } else {
-              alert(data.error || "Failed to share note.");
-            }
-          })
-          .catch(err => {
-            console.error("Share error:", err);
-            alert("An error occurred while sharing the note.");
-          });
+          if (window.openShareModal) {
+            window.openShareModal({
+              id: note.id,
+              title: note.title,
+              content: note.content,
+            });
+          } else {
+            console.error("Share modal not loaded yet.");
+          }
         });
 
         notesContainer.appendChild(div);
@@ -173,14 +161,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initial fetch
   fetchNotes();
-
-  // Sidebar toggle
-  const menuBtn = document.getElementById("menu-btn");
-  const sidebar = document.getElementById("sidebar");
-
-  if (menuBtn && sidebar) {
-    menuBtn.addEventListener("click", () => {
-      sidebar.classList.toggle("sidebar-closed");
-    });
-  }
 });

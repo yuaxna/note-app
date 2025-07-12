@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>Shared Notes</title>
   <link rel="stylesheet" href="/css/home.css" />
 </head>
+
 <body>
   <header>
     <button id="menu-btn">&#9776;</button>
@@ -33,7 +35,17 @@
     </section>
   </main>
 
+  <div id="share-modal" class="modal">
+    <div class="modal-content">
+      <button id="close-share-modal">×</button>
+      <h3>Share Note</h3>
+      <ul id="user-list"></ul>
+    </div>
+  </div>
+
+
   <script src="/js/shared.js"></script>
-    <script src = "/js/profile.js"></script>
+  <script src="/js/menu.js"></script>
 </body>
+
 </html>
