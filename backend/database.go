@@ -4,14 +4,13 @@ import (
 	"database/sql"
 	"log"
 
-	_ "github.com/mattn/go-sqlite3" // or whatever database driver you're using
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var DB *sql.DB
 
 func InitDB() {
 	var err error
-	// Using SQLite for this example - change connection string for your database
 	DB, err = sql.Open("sqlite3", "./notes.db")
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
@@ -21,12 +20,13 @@ func InitDB() {
 		log.Fatal("Failed to ping database:", err)
 	}
 
-	// Create tables if they don't exist
 	createTables()
-	log.Println("Database connected successfully")
+	seedData()
+
+	log.Println("Database connected, tables created/verified, and seed data inserted successfully")
 }
+
 func createTables() {
-	// Create users table
 	userTable := `
 	CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,7 +38,6 @@ func createTables() {
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);`
 
-	// Create notes table
 	noteTable := `
 	CREATE TABLE IF NOT EXISTS notes (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,15 +45,18 @@ func createTables() {
 		content TEXT NOT NULL,
 		user_id INTEGER NOT NULL,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (user_id) REFERENCES users (id)
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 	);`
 
-	// Create shared_notes table
 	sharedNotesTable := `
 	CREATE TABLE IF NOT EXISTS shared_notes (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		note_id INTEGER NOT NULL,
 		user_id INTEGER NOT NULL,
+		can_edit INTEGER DEFAULT 0,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (note_id) REFERENCES notes(id) ON DELETE CASCADE,
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
 		UNIQUE (note_id, user_id)
@@ -69,6 +71,39 @@ func createTables() {
 	if _, err := DB.Exec(sharedNotesTable); err != nil {
 		log.Fatal("Failed to create shared_notes table:", err)
 	}
+}
 
-	log.Println("Database tables created/verified successfully")
+func seedData() {
+	// Replace these hashed passwords with real bcrypt hashes for login
+	const user1Password = "$2a$10$XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" // dummy hash
+	const user2Password = "$2a$10$YYYYYYYYYYYYYYYYYYYYYYYYYYYYYY" // dummy hash
+
+	_, err := DB.Exec(`
+		INSERT OR IGNORE INTO users (id, fullname, email, username, password, gender)
+		VALUES
+			(1, 'User One', 'user1@example.com', 'user1', ?, 'Female'),
+			(2, 'User Two', 'user2@example.com', 'user2', ?, 'Male')
+	`, user1Password, user2Password)
+	if err != nil {
+		log.Fatal("Failed to insert seed users:", err)
+	}
+
+	_, err = DB.Exec(`
+		INSERT OR IGNORE INTO notes (id, title, content, user_id)
+		VALUES
+			(1, 'First Note', 'This is the first note content', 1),
+			(2, 'Second Note', 'This is the second note content', 2)
+	`)
+	if err != nil {
+		log.Fatal("Failed to insert seed notes:", err)
+	}
+
+	_, err = DB.Exec(`
+		INSERT OR IGNORE INTO shared_notes (note_id, user_id, can_edit)
+		VALUES
+			(2, 1, 1)
+	`)
+	if err != nil {
+		log.Fatal("Failed to insert seed shared_notes:", err)
+	}
 }

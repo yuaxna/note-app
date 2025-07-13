@@ -67,7 +67,7 @@ func main() {
 		api.GET("/notes", backend.GetUserNotes)
 		api.GET("/debug", backend.DebugUser)
 		api.POST("/notes", backend.CreateNote)
-		router.PUT("/api/notes/:id", backend.UpdateNote)
+		api.PUT("/notes/:id", backend.UpdateNote)
 		api.DELETE("/notes/:id", backend.DeleteNote)
 
 		api.POST("/share", backend.ShareNote)

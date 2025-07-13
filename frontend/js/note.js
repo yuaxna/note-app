@@ -26,6 +26,12 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        showMessage("Invalid response from server.");
+        return;
+      }
+
       const notes = await res.json();
       notesContainer.innerHTML = "";
       if (notesCount) notesCount.textContent = notes.length;
@@ -99,7 +105,15 @@ document.addEventListener("DOMContentLoaded", () => {
         credentials: "include"
       });
 
-      const data = await res.json();
+      const contentType = res.headers.get("content-type") || "";
+      let data = {};
+      if (contentType.includes("application/json")) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        console.error("Non-JSON response on delete:", text);
+      }
+
       if (res.ok) {
         showMessage("Note deleted", true);
         fetchNotes();
@@ -137,7 +151,17 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify(newNote),
       });
 
-      const data = await res.json();
+      const contentType = res.headers.get("content-type") || "";
+      let data = {};
+      if (contentType.includes("application/json")) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        console.error("Non-JSON response on save:", text);
+        showMessage("Failed to save note: Server returned an invalid response");
+        return;
+      }
+
       if (res.ok) {
         titleInput.value = "";
         contentInput.value = "";
@@ -152,7 +176,6 @@ document.addEventListener("DOMContentLoaded", () => {
       showMessage("Error saving note");
     }
   });
-
 
   // Initial load
   fetchNotes();

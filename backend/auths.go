@@ -151,7 +151,7 @@ func GetMe(c *gin.Context) {
 	})
 }
 
-func isAPIRequest(c *gin.Context) bool {
+func IsAPIRequest(c *gin.Context) bool {
 	return c.Request.Header.Get("Content-Type") == "application/json" ||
 		c.Request.Header.Get("Accept") == "application/json" ||
 		(len(c.Request.URL.Path) >= 4 && c.Request.URL.Path[:4] == "/api") ||
