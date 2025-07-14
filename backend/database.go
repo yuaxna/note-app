@@ -21,7 +21,6 @@ func InitDB() {
 	}
 
 	createTables()
-	seedData()
 
 	log.Println("Database connected, tables created/verified, and seed data inserted successfully")
 }
@@ -70,40 +69,5 @@ func createTables() {
 	}
 	if _, err := DB.Exec(sharedNotesTable); err != nil {
 		log.Fatal("Failed to create shared_notes table:", err)
-	}
-}
-
-func seedData() {
-	// Replace these hashed passwords with real bcrypt hashes for login
-	const user1Password = "$2a$10$XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" // dummy hash
-	const user2Password = "$2a$10$YYYYYYYYYYYYYYYYYYYYYYYYYYYYYY" // dummy hash
-
-	_, err := DB.Exec(`
-		INSERT OR IGNORE INTO users (id, fullname, email, username, password, gender)
-		VALUES
-			(1, 'User One', 'user1@example.com', 'user1', ?, 'Female'),
-			(2, 'User Two', 'user2@example.com', 'user2', ?, 'Male')
-	`, user1Password, user2Password)
-	if err != nil {
-		log.Fatal("Failed to insert seed users:", err)
-	}
-
-	_, err = DB.Exec(`
-		INSERT OR IGNORE INTO notes (id, title, content, user_id)
-		VALUES
-			(1, 'First Note', 'This is the first note content', 1),
-			(2, 'Second Note', 'This is the second note content', 2)
-	`)
-	if err != nil {
-		log.Fatal("Failed to insert seed notes:", err)
-	}
-
-	_, err = DB.Exec(`
-		INSERT OR IGNORE INTO shared_notes (note_id, user_id, can_edit)
-		VALUES
-			(2, 1, 1)
-	`)
-	if err != nil {
-		log.Fatal("Failed to insert seed shared_notes:", err)
 	}
 }
