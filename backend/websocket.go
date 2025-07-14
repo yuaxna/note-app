@@ -17,8 +17,6 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-// NoteUpdateMessage struct - message to send to clients
-
 var Manager = ClientManager{
 	clients:    make(map[*websocket.Conn]bool),
 	broadcast:  make(chan NoteUpdateMessage),
@@ -100,5 +98,5 @@ func BroadcastNoteUpdate(action string, noteID int, title, content, sender strin
 
 // In backend/websocket.go
 func StartManager() {
-    go Manager.start()
+	go Manager.start()
 }

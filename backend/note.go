@@ -1,7 +1,6 @@
 package backend
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -18,9 +17,12 @@ func CreateNoteHandler(c *gin.Context) {
 		return
 	}
 
-	userID := c.GetInt("userID") // Set by auth middleware
+	session := sessions.Default(c)
+	userID := session.Get("user_id").(int)
+	username := session.Get("username").(string)
+
 	note.UserID = userID
-	note.CreatedAt = time.Now().Format("2006-01-02 15:04:05") // Use a more standard format
+	note.CreatedAt = time.Now().Format("2006-01-02 15:04:05")
 	note.UpdatedAt = note.CreatedAt
 
 	stmt, err := DB.Prepare("INSERT INTO notes(user_id, title, content, created_at, updated_at) VALUES (?, ?, ?, ?, ?)")
@@ -30,11 +32,15 @@ func CreateNoteHandler(c *gin.Context) {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(note.UserID, note.Title, note.Content, note.CreatedAt, note.UpdatedAt)
+	res, err := stmt.Exec(note.UserID, note.Title, note.Content, note.CreatedAt, note.UpdatedAt)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create note"})
 		return
 	}
+
+	noteID, _ := res.LastInsertId()
+
+	BroadcastNoteUpdate("create", int(noteID), note.Title, note.Content, username)
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Note created"})
 }
@@ -164,10 +170,11 @@ func UpdateNote(c *gin.Context) {
 		return
 	}
 
-	currentUserID := c.GetInt("user_id")
-	log.Printf("[DEBUG] Checking edit permission for user %d on note %d", currentUserID, id)
+	session := sessions.Default(c)
+	currentUserID := session.Get("user_id").(int)
+	username := session.Get("username").(string)
 
-	// --- Check permission to edit note ---
+	// Check permission
 	var exists bool
 	err = DB.QueryRow(`
 		SELECT EXISTS (
@@ -177,40 +184,36 @@ func UpdateNote(c *gin.Context) {
 		)
 	`, currentUserID, id, currentUserID, currentUserID).Scan(&exists)
 
-	log.Printf("[DEBUG] Permission check error: %v", err)
-	log.Printf("[DEBUG] Permission exists: %v", exists)
-
-	if err != nil {
-		log.Printf("[ERROR] DB error during permission check: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error during permission check"})
+	if err != nil || !exists {
+		c.JSON(http.StatusForbidden, gin.H{"error": "No permission to edit this note"})
 		return
 	}
 
-	log.Printf("[DEBUG] Permission exists: %v", exists)
-
-	if !exists {
-		c.JSON(http.StatusForbidden, gin.H{"error": "You don't have permission to edit this note"})
-		return
-	}
-
-	// --- Update note ---
 	_, err = DB.Exec(`
         UPDATE notes SET title = ?, content = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
     `, input.Title, input.Content, id)
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to update note: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update note"})
 		return
 	}
+
+	BroadcastNoteUpdate("edit", id, input.Title, input.Content, username)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Note updated successfully"})
 }
 
 func DeleteNote(c *gin.Context) {
-	// Get note ID from URL param
-	noteID := c.Param("id")
-	userID := c.GetInt("user_id")
+	noteIDStr := c.Param("id")
+	noteID, err := strconv.Atoi(noteIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid note ID"})
+		return
+	}
+
+	session := sessions.Default(c)
+	userID := session.Get("user_id").(int)
+	username := session.Get("username").(string)
 
 	res, err := DB.Exec("DELETE FROM notes WHERE id = ? AND user_id = ?", noteID, userID)
 	if err != nil {
@@ -223,6 +226,8 @@ func DeleteNote(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Note not found or not owned by user"})
 		return
 	}
+
+	BroadcastNoteUpdate("delete", noteID, "", "", username)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Note deleted successfully"})
 }

@@ -39,21 +39,21 @@ type ShareInput struct {
 }
 
 type NoteUpdateMessage struct {
-	Action    string    `json:"action"` // create, update, delete, share
+	Action    string    `json:"action"`
 	NoteID    int       `json:"note_id"`
-	Title     string    `json:"title,omitempty"`
-	Content   string    `json:"content,omitempty"`
-	Sender    string    `json:"sender"`    // username
-	Timestamp time.Time `json:"timestamp"` // time of update
+	Title     string    `json:"title"`
+	Content   string    `json:"content"`
+	Sender    string    `json:"sender"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
-// ClientManager manages all websocket clients and broadcasts
+// ClientManager manages WebSocket connections
 type ClientManager struct {
 	clients    map[*websocket.Conn]bool
 	broadcast  chan NoteUpdateMessage
 	register   chan *websocket.Conn
 	unregister chan *websocket.Conn
-	mu         sync.Mutex
+	mu         sync.RWMutex
 }
 
 type NoteUpdateInput struct {

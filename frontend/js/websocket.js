@@ -1,27 +1,62 @@
-const ws = new WebSocket("ws://localhost:8080/ws");
+let ws = null;
 
-ws.onopen = () => {
-  console.log("WebSocket connected");
-};
+function connectWebSocket() {
+  if (ws && ws.readyState === WebSocket.OPEN) return;
 
-ws.onmessage = (event) => {
-  console.log("Message from server:", event.data);
-  // Here, update your notes UI live based on received message
-};
+  ws = new WebSocket("ws://localhost:8080/api/ws");
 
-ws.onclose = () => {
-  console.log("WebSocket disconnected");
-};
+  ws.onopen = () => console.log("✅ WebSocket connected");
 
-ws.onerror = (error) => {
-  console.error("WebSocket error:", error);
-};
+  ws.onmessage = (e) => {
+    const msg = JSON.parse(e.data);
+    switch (msg.action) {
+      case "create":
+      case "edit":
+      case "delete":
+        handleLiveUpdate(msg);
+        break;
+      default:
+        console.warn("Unknown action:", msg.action);
+    }
+  };
 
-function sendNoteUpdate(note) {
-  if (ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({
-      ...note,
-      sender: currentUsername // you'd fetch this from session
-    }));
+  ws.onclose = () => {
+    console.warn("🔌 WebSocket disconnected. Retrying in 3s...");
+    setTimeout(connectWebSocket, 3000);
+  };
+
+  ws.onerror = (err) => console.error("WebSocket error:", err);
+}
+
+function handleLiveUpdate(msg) {
+  console.log("📬 Live update received:", msg);
+
+  // Simply re-fetch all notes when anything changes
+  if (typeof window.fetchNotes === "function") {
+    window.fetchNotes(); // <-- this refreshes the list
+  } else {
+    console.warn("⚠️ fetchNotes is not defined yet.");
   }
 }
+
+function sendNoteUpdate(action, noteId, title, content, sender) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    const payload = {
+      action,
+      note_id: noteId,
+      title,
+      content,
+      sender,
+    };
+    ws.send(JSON.stringify(payload));
+  } else {
+    console.warn("⚠️ Cannot send WebSocket message — not connected");
+  }
+}
+
+// Auto-connect on page load
+document.addEventListener("DOMContentLoaded", connectWebSocket);
+
+// Make available globally (if needed elsewhere)
+window.connectWebSocket = connectWebSocket;
+window.sendNoteUpdate = sendNoteUpdate;

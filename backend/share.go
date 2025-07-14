@@ -30,21 +30,36 @@ func ShareNote(c *gin.Context) {
 		return
 	}
 
-	// <-- Add the log here -->
 	log.Println("Sharing note:", input.NoteID, "to user:", input.TargetUserID)
 
-	// Insert into shared_notes (ignoring duplicates due to UNIQUE constraint)
+	// Insert into shared_notes
 	_, err := DB.Exec(`
         INSERT OR IGNORE INTO shared_notes (note_id, user_id) VALUES (?, ?)
     `, input.NoteID, input.TargetUserID)
-
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to share note"})
 		return
 	}
 
+	// ✅ Fetch note details
+	var title, content, author string
+	err = DB.QueryRow(`
+        SELECT n.title, n.content, u.username
+        FROM notes n
+        JOIN users u ON n.user_id = u.id
+        WHERE n.id = ?
+    `, input.NoteID).Scan(&title, &content, &author)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load note for broadcast"})
+		return
+	}
+
+	// ✅ Broadcast to all clients (will show up for shared user)
+	BroadcastNoteUpdate("create", input.NoteID, title, content, author)
+
 	c.JSON(http.StatusOK, gin.H{"message": "Note shared successfully"})
 }
+
 
 func GetSharedNotes(c *gin.Context) {
 	userID := c.GetInt("user_id")

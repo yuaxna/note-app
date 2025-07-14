@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 3000);
   }
 
+  // Export this function so WebSocket can use it
   async function fetchNotes() {
     try {
       const res = await fetch("/api/notes", { credentials: "include" });
@@ -95,7 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function editNote(note) {
     titleInput.value = note.title;
     contentInput.value = note.content;
-    noteIdInput.value = note.id; // This is important!
+    noteIdInput.value = note.id;
   }
 
   async function deleteNote(id) {
@@ -179,4 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initial load
   fetchNotes();
+
+  // Make fetchNotes available globally for WebSocket
+  window.fetchNotes = fetchNotes;
 });

@@ -15,7 +15,7 @@ func main() {
 	backend.InitDB()
 
 	// Start WebSocket manager goroutine
-	// backend.StartManager()
+	backend.StartManager()
 
 	// Setup Gin router
 	router := gin.Default()
