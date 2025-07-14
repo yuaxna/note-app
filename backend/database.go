@@ -53,13 +53,22 @@ func createTables() {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		note_id INTEGER NOT NULL,
 		user_id INTEGER NOT NULL,
-		can_edit INTEGER DEFAULT 0,
+		can_edit INTEGER DEFAULT 0 CHECK (can_edit IN (0, 1)),
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (note_id) REFERENCES notes(id) ON DELETE CASCADE,
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
 		UNIQUE (note_id, user_id)
 	);`
+
+	triggerUpdateSharedNotes := `
+	CREATE TRIGGER IF NOT EXISTS trg_update_shared_notes
+	AFTER UPDATE ON shared_notes
+	FOR EACH ROW
+	BEGIN
+		UPDATE shared_notes SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+	END;
+`
 
 	if _, err := DB.Exec(userTable); err != nil {
 		log.Fatal("Failed to create users table:", err)
@@ -69,5 +78,8 @@ func createTables() {
 	}
 	if _, err := DB.Exec(sharedNotesTable); err != nil {
 		log.Fatal("Failed to create shared_notes table:", err)
+	}
+	if _, err := DB.Exec(triggerUpdateSharedNotes); err != nil {
+		log.Fatal("Failed to create trigger for shared_notes:", err)
 	}
 }

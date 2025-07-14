@@ -43,18 +43,22 @@ func GetUserNotes(c *gin.Context) {
 	userID := c.GetInt("user_id")
 
 	rows, err := DB.Query(`
-		SELECT 
-			n.id, n.title, n.content, 
-			COALESCE(n.created_at, datetime('now')) as created_at,
-			u.username,
-			CASE WHEN n.user_id = ? THEN 1 ELSE 0 END AS is_owner,
-			CASE WHEN (n.user_id = ? OR s.user_id = ?) THEN 1 ELSE 0 END AS can_edit
-		FROM notes n
-		LEFT JOIN shared_notes s ON s.note_id = n.id AND s.user_id = ?
-		JOIN users u ON n.user_id = u.id
-		WHERE n.user_id = ? OR s.user_id = ?
-		ORDER BY n.created_at DESC
-	`, userID, userID, userID, userID, userID, userID)
+    SELECT 
+        n.id, n.title, n.content,
+        COALESCE(n.created_at, datetime('now')) AS created_at,
+        u.username,
+        CASE WHEN n.user_id = ? THEN 1 ELSE 0 END AS is_owner,
+        CASE 
+  			WHEN n.user_id = ? THEN 1
+  			WHEN s.user_id = ? THEN 1
+  			ELSE 0
+		END AS can_edit
+    FROM notes n
+    LEFT JOIN shared_notes s ON s.note_id = n.id AND s.user_id = ?
+    JOIN users u ON n.user_id = u.id
+    WHERE n.user_id = ? OR s.user_id = ?
+    ORDER BY n.created_at DESC
+`, userID, userID, userID, userID, userID, userID)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch notes"})
@@ -166,12 +170,12 @@ func UpdateNote(c *gin.Context) {
 	// --- Check permission to edit note ---
 	var exists bool
 	err = DB.QueryRow(`
-	SELECT EXISTS (
-		SELECT 1 FROM notes n
-		LEFT JOIN shared_notes s ON s.note_id = n.id AND s.user_id = ?
-		WHERE n.id = ? AND (n.user_id = ? OR (s.user_id = ? AND s.can_edit = 1))
-	)
-`, currentUserID, id, currentUserID, currentUserID).Scan(&exists)
+		SELECT EXISTS (
+			SELECT 1 FROM notes n
+			LEFT JOIN shared_notes s ON s.note_id = n.id AND s.user_id = ?
+			WHERE n.id = ? AND (n.user_id = ? OR s.user_id = ?)
+		)
+	`, currentUserID, id, currentUserID, currentUserID).Scan(&exists)
 
 	log.Printf("[DEBUG] Permission check error: %v", err)
 	log.Printf("[DEBUG] Permission exists: %v", exists)

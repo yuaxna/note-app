@@ -15,7 +15,7 @@ func main() {
 	backend.InitDB()
 
 	// Start WebSocket manager goroutine
-	backend.StartManager()
+	// backend.StartManager()
 
 	// Setup Gin router
 	router := gin.Default()
@@ -74,10 +74,10 @@ func main() {
 
 		api.GET("/shared", backend.GetSharedNotes)
 		api.GET("/users", backend.GetUsers)
-	}
 
-	// WebSocket endpoint for real-time collaboration
-	router.GET("/ws", backend.WSHandler)
+		api.GET("/ws", backend.WSHandler)
+
+	}
 
 	// Start Server
 	log.Println("Server running at http://localhost:8080")
